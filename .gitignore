@@ -1,0 +1,6 @@
+__pycache__
+task_db/__pycache__
+theory/chroma_db_folder
+theory/query.py
+chroma_db_folder
+.env
