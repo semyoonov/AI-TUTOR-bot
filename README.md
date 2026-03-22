@@ -76,7 +76,7 @@ DB_NAME=ai_tutor
 DB_USER=postgres
 DB_PASSWORD=your_password
 
-# Chroma DB
+# Chroma DB & Embedding model
 HF_MODEL_NAME="ai-forever/sbert_large_nlu_ru"
 CHROMA_DB_FOLDER="./chroma_db_folder"
 ```
