@@ -1,6 +1,10 @@
 #тут бот (может еще сайт напишем, но не факт)
 #тут хватит одного файла это просто обычный бот в тг будет он будет брать все функции из других папок по большей части
 
+print("=== BOT.PY НАЧАЛ РАБОТУ ===", flush=True)
+import logging
+logging.basicConfig(level=logging.INFO)
+
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
@@ -52,10 +56,14 @@ async def handle_message(message : types.Message):
             response = await loop.run_in_executor(None, get_task_recommendation, tg_id, user_query, filters)
 
             if isinstance(response, dict):
-                num = response.get('task_number', '??')
+                num = response.get('task_number', None)
                 cond = response.get('condition', 'Условие не найдено.')
-                
-                full_text = f"📝 Задача №{num}\n\n{cond}"
+
+                if num:
+                    full_text = f"📝 Задача №{num}\n\n{cond}"
+                else:
+                    full_text = cond
+
                 await message.answer(full_text)
             else:
                 await message.answer(response) 

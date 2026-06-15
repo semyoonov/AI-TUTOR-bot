@@ -24,7 +24,7 @@ def get_task_recommendation(tg_id : int, user_query : str, filters : dict):
         return {"answer": "Новых задач не нашлось.", "selected_task_id": None}
 
     text = "\n---\n".join([
-        f"ID: {t[1]} | №{t[0]}\nУсловие: {t[2]}" 
+        f"ID: {t[0]} | №{t[1]}\nУсловие: {t[2]}" 
         for t in tasks_from_db
     ])
 

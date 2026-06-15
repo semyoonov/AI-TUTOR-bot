@@ -26,6 +26,8 @@ services:
       db:
         condition: service_healthy
     environment:
+      HF_HOME : /app/hf_cache
+      HF_XET_HIGH_PERFORMANCE: 1
       DB_HOST: db
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
@@ -34,8 +36,10 @@ services:
       TG_TOKEN: ${TG_TOKEN}
       MISTRAL_TOKEN: ${MISTRAL_TOKEN}
       MISTRAL_MODEL_NAME: ${MISTRAL_MODEL_NAME}
+      HF_TOKEN: ${HF_TOKEN}
     volumes:
       - chroma_data:/app/chroma_db_folder
+      - hf_cache:/app/hf_cache
     command: ["python", "bot.py"]
 
   init_db:
@@ -47,6 +51,9 @@ services:
     env_file:
       - .env
     environment:
+      PYTHONUNBUFFERED: 1
+      HF_XET_HIGH_PERFORMANCE: 1
+      HF_HOME : /app/hf_cache
       DB_HOST: db
       DB_PORT: ${DB_PORT}
       DB_NAME: ${DB_NAME}
@@ -54,6 +61,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     volumes:
       - chroma_data:/app/chroma_db_folder
+      - hf_cache:/app/hf_cache
     command: >
       sh -c "
       python init_db.py
@@ -62,3 +70,4 @@ services:
 volumes:
   pgdata:
   chroma_data:
+  hf_cache:

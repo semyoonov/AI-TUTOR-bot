@@ -26,11 +26,11 @@ def get_task_from_db(tg_user_id, filters: dict, limit = 5):
         if filters.get("task_number"):
             query += " AND t.task_number = %s"
             params.append(filters["task_number"])
-        
+
         if filters.get("difficulty"):
             query += " AND t.difficulty = %s"
             params.append(filters["difficulty"])
-        
+
         query += " ORDER BY RANDOM() LIMIT %s"
         params.append(limit)
 
