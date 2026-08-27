@@ -17,22 +17,22 @@ llm = ChatMistralAI(
 
 recommendation_chain = ChatPromptTemplate.from_template(get_task_prompt) | llm | JsonOutputParser()
 
-def get_task_recommendation(tg_id : int, user_query : str, filters : dict):
-    tasks_from_db = get_task_from_db(tg_user_id=tg_id, filters=filters)
+async def get_task_recommendation(tg_id : int, user_query : str, filters : dict):
+    tasks_from_db = await get_task_from_db(tg_user_id=tg_id, filters=filters)
 
     if not tasks_from_db:
-        return {"answer": "Новых задач не нашлось.", "selected_task_id": None}
+        return {"condition": "Новых задач не нашлось.", "selected_task_id": None}
 
     text = "\n---\n".join([
-        f"ID: {t[0]} | №{t[1]}\nУсловие: {t[2]}" 
+        f"ID: {t['id']} | №{t['task_number']}\nУсловие: {t['condition']}" 
         for t in tasks_from_db
     ])
 
     try:
-        return recommendation_chain.invoke({
+        return await recommendation_chain.ainvoke({
             "query": user_query,
             "context": text
         })
     except Exception as e:
         print(f"Mistral Error: {e}")
-        return {"answer": "Ошибка ИИ", "selected_task_id": None}
+        return {"condition": "Ошибка ИИ", "selected_task_id": None}

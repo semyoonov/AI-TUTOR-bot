@@ -45,15 +45,14 @@ async def handle_message(message : types.Message):
         }
 
         filters = {k: v for k, v in raw_filters.items() if v is not None}
-        loop = asyncio.get_event_loop()
 
         if "THEORY" in intent:
             print("+THEORY")
-            response = await loop.run_in_executor(None, get_rag_answer, user_query)
+            response = await get_rag_answer(user_query)
             await message.answer(response)    
         else:
             print("+TASK")
-            response = await loop.run_in_executor(None, get_task_recommendation, tg_id, user_query, filters)
+            response = await get_task_recommendation(tg_id, user_query, filters)
 
             if isinstance(response, dict):
                 num = response.get('task_number', None)

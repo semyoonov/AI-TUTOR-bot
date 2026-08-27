@@ -9,3 +9,4 @@ langchain-core==1.2.14
 langchain-mistralai==1.1.1
 langchain-text-splitters==1.1.1
 sentence-transformers==5.2.3
+asyncpg==0.30.0

@@ -37,5 +37,5 @@ chain = (
     | StrOutputParser()
 )
 
-def get_rag_answer(query):
-    return chain.invoke(query)
+async def get_rag_answer(query):
+    return await chain.ainvoke(query)
