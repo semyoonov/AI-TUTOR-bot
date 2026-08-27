@@ -1,17 +1,19 @@
 #инициализация баз данных
-def init_db():
+import asyncio
+async def init_db():
     try:
         from task_db.init_task_db import init_database, create_task_tables
         from task_db.parse_db import parse_tasks
-        import theory.chunking_embending_insert
+        from theory.chunking_embending_insert import insert_theory
         
-        init_database()
-        create_task_tables()
-        parse_tasks()
+        await init_database()
+        await create_task_tables()
+        await parse_tasks()
+        insert_theory()
         print("Инициализация завершена успешно")
     except Exception as e:
         print(f"Ошибка при инициализации: {e}")
         raise
 
 if __name__ == "__main__":
-    init_db()
+    asyncio.run(init_db())

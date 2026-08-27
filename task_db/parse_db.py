@@ -1,10 +1,9 @@
-import psycopg2
+import asyncpg
 from task_db.config_bd import DB_CONFIG, TABLE_NAMES
 
-def parse_tasks():
+async def parse_tasks():
     folder_path = 'task_db/task_examples/'
-    conn = psycopg2.connect(**DB_CONFIG)
-    cursor = conn.cursor()
+    conn = await asyncpg.connect(**DB_CONFIG)
 
     for task_name in TABLE_NAMES:
         tasks_to_insert = []
@@ -21,17 +20,13 @@ def parse_tasks():
                 tasks_to_insert.append((clean_task_number, task_text, None, None, answer_text))
         query = """
             INSERT INTO tasks (task_number, condition, image, solution, answer)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES ($1, $2, $3, $4, $5)
         """
 
         if tasks_to_insert:
-            cursor.executemany(query, tasks_to_insert)
-            conn.commit()
+            await conn.executemany(query, tasks_to_insert)
             print(f'Data from (table {task_name}) successfully parsed')
         else:
             print(f"There's nothing to parse in the table {task_name}")
-    cursor.close()
-    conn.close()
 
-# if __name__ == "__main__":
-#     parse_tasks()
+    await conn.close()
