@@ -6,25 +6,20 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 import asyncio
+import httpx
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
+from config import TG_TOKEN
+import os
+from dotenv import load_dotenv
 
-from langchain_core.prompts import PromptTemplate
-from langchain_mistralai import ChatMistralAI
-from langchain_core.output_parsers import JsonOutputParser
-
-from rag import get_rag_answer
-from create_recommendations.llm_to_recomend import get_task_recommendation
-from config import TG_TOKEN, MISTRAL_MODEL_NAME, MISTRAL_TOKEN
-from promts import ROUTER_PROMPT
-
-llm = ChatMistralAI(api_key=MISTRAL_TOKEN, model=MISTRAL_MODEL_NAME)
-router_template = PromptTemplate.from_template(ROUTER_PROMPT)
-router_chain = router_template | llm | JsonOutputParser()
+load_dotenv()
 
 bot = Bot(token=TG_TOKEN)
 dp = Dispatcher()
+
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000/api/chat")
 
 @dp.message(Command("start"))
 async def start(message : types.Message):
@@ -32,42 +27,14 @@ async def start(message : types.Message):
 
 @dp.message()
 async def handle_message(message : types.Message):
-    user_query = message.text
-    tg_id = message.from_user.id
+    await message.bot.send_chat_action(chat_id=message.chat.id, action="typing")
 
     try:
-        routing_data = await router_chain.ainvoke({"query": user_query})
-        intent = str(routing_data.get("intent", "THEORY")).upper()
-
-        raw_filters = {
-            "task_number": routing_data.get("task_number"),
-            "difficulty": routing_data.get("difficulty")
-        }
-
-        filters = {k: v for k, v in raw_filters.items() if v is not None}
-
-        if "THEORY" in intent:
-            print("+THEORY")
-            response = await get_rag_answer(user_query)
-            await message.answer(response)    
-        else:
-            print("+TASK")
-            response = await get_task_recommendation(tg_id, user_query, filters)
-
-            if isinstance(response, dict):
-                num = response.get('task_number', None)
-                cond = response.get('condition', 'Условие не найдено.')
-
-                if num:
-                    full_text = f"📝 Задача №{num}\n\n{cond}"
-                else:
-                    full_text = cond
-
-                await message.answer(full_text)
-            else:
-                await message.answer(response) 
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            res = await client.post(API_URL, json={"user_id" : message.from_user.id, "message" : message.text})
+            await message.answer(res.json())
     except Exception as e:
-        print(f"Ошибка в боте: {e}")
+        print(f"Ошибка API: {e}")
         await message.answer("Произошла ошибка. Попробуй позже.")
 
 async def main():
