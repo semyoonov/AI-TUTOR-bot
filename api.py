@@ -58,11 +58,7 @@ async def chat(req : ChatRequest):
                 num = response.get('task_number', None)
                 cond = response.get('condition', 'Условие не найдено.')
 
-                if num:
-                    full_text = f"📝 Задача №{num}\n\n{cond}"
-                else:
-                    full_text = cond
-
+                full_text = f"📝 **Задача №{num}**\n\n{cond}" if num else cond
                 return full_text
             else:
                 return response 

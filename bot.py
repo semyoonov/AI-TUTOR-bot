@@ -13,6 +13,13 @@ from aiogram.enums import ParseMode
 from config import TG_TOKEN
 import os
 from dotenv import load_dotenv
+from aiogram.methods.base import TelegramMethod
+
+class SendRichMessage(TelegramMethod[types.Message]):
+    __returning__ = types.Message
+    __api_method__ = "sendRichMessage"
+    chat_id: int | str
+    rich_message: dict
 
 load_dotenv()
 
@@ -32,7 +39,15 @@ async def handle_message(message : types.Message):
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             res = await client.post(API_URL, json={"user_id" : message.from_user.id, "message" : message.text})
-            await message.answer(res.json())
+            reply_text = res.json().replace(r'\n', '\n')
+
+            try:
+                await message.bot(SendRichMessage(
+                    chat_id=message.chat.id,
+                    rich_message={"markdown": reply_text}
+                ))
+            except Exception:
+                await message.answer(reply_text)
     except Exception as e:
         print(f"Ошибка API: {e}")
         await message.answer("Произошла ошибка. Попробуй позже.")

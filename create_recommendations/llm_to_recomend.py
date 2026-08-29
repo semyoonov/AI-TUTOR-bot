@@ -5,17 +5,30 @@
 # from langchain_community.prompts import ChatPromptTemplate
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
-from langchain_core.output_parsers import JsonOutputParser
 from config import MISTRAL_MODEL_NAME, MISTRAL_TOKEN
 from promts import get_task_prompt
 from create_recommendations.select_in_db import get_task_from_db
+
+import json
+import re
+from langchain_core.output_parsers import StrOutputParser
 
 llm = ChatMistralAI(
     api_key=MISTRAL_TOKEN,
     model=MISTRAL_MODEL_NAME
 )
 
-recommendation_chain = ChatPromptTemplate.from_template(get_task_prompt) | llm | JsonOutputParser()
+recommendation_chain = ChatPromptTemplate.from_template(get_task_prompt) | llm | StrOutputParser()
+
+def parse_json(raw_text: str) -> dict:
+    match = re.search(r"\{.*\}", raw_text, re.DOTALL)
+    json_str = match.group(0) if match else raw_text
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        cleaned = re.sub(r'\\(?![\\"])', r'\\\\', json_str)
+        return json.loads(cleaned, strict=False)
+
 
 async def get_task_recommendation(tg_id : int, user_query : str, filters : dict):
     tasks_from_db = await get_task_from_db(tg_user_id=tg_id, filters=filters)
@@ -29,10 +42,12 @@ async def get_task_recommendation(tg_id : int, user_query : str, filters : dict)
     ])
 
     try:
-        return await recommendation_chain.ainvoke({
+        raw =  await recommendation_chain.ainvoke({
             "query": user_query,
             "context": text
         })
+
+        return parse_json(raw)
     except Exception as e:
         print(f"Mistral Error: {e}")
         return {"condition": "Ошибка ИИ", "selected_task_id": None}
