@@ -4,3 +4,4 @@ theory/chroma_db_folder
 theory/query.py
 chroma_db_folder
 .env
+memory/data/*.md

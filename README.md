@@ -56,6 +56,8 @@ CHROMA_DB_FOLDER="./chroma_db_folder"
 - `task_db/` — работа с PostgreSQL и задачи
 - `theory/` — векторная база Chroma и теория
 - `rag.py` — RAG цепочка для ответов
+- `memory/` — память ученика: per-user `memory/data/<user_id>.md` со статистикой по номерам и текущей незакрытой задачей
+- `answer_checker.py` — проверка ответа ученика на задачу через LLM
 - `docker-compose.yml` — конфигурация Docker
 
 

@@ -13,7 +13,7 @@ async def get_task_from_db(tg_user_id, filters: dict, limit = 5):
         conn = await asyncpg.connect(**DB_CONFIG)
 
         query = """
-            SELECT id, task_number, condition, difficulty 
+            SELECT id, task_number, condition, difficulty, answer
                 FROM tasks t
                 WHERE NOT EXISTS (
                     SELECT 1 FROM user_progress up 
