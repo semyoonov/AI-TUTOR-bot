@@ -38,9 +38,10 @@ services:
       MISTRAL_TOKEN: ${MISTRAL_TOKEN}
       MISTRAL_MODEL_NAME: ${MISTRAL_MODEL_NAME}
     volumes:
+      - .:/app
       - chroma_data:/app/chroma_db_folder
       - hf_cache:/app/hf_cache
-    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   bot:
     build: .

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor — Подготовка к ЕГЭ</title>
+
+    <!-- Шрифт Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- KaTeX для формул LaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Marked для Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --surface: #131b2e;
+            --surface-card: #1c2640;
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Минималистичная шапка */
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .header-title span.dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        .user-id-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .user-id-wrap input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: inherit;
+            font-weight: 600;
+            width: 65px;
+        }
+
+        /* Центрированная зона чата */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 780px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #chat-window {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        #chat-window::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #chat-window::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Сообщения */
+        .msg {
+            display: flex;
+            flex-direction: column;
+            max-width: 82%;
+            animation: fadeIn 0.15s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg.user {
+            align-self: flex-end;
+        }
+
+        .msg.tutor {
+            align-self: flex-start;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 0.94rem;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .msg.user .bubble {
+            background: var(--primary);
+            color: #ffffff;
+            border-bottom-right-radius: 3px;
+        }
+
+        .msg.tutor .bubble {
+            background: var(--surface-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-bottom-left-radius: 3px;
+        }
+
+        .bubble p {
+            margin-bottom: 8px;
+        }
+        .bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .bubble code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.88em;
+        }
+
+        .bubble .katex-display {
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+
+        /* Индикатор загрузки */
+        .typing {
+            display: flex;
+            gap: 5px;
+            padding: 10px 14px;
+        }
+
+        .typing span {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: blink 1.2s infinite ease-in-out both;
+        }
+
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes blink {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Быстрые кнопки */
+        .quick-chips {
+            display: flex;
+            gap: 8px;
+            padding: 0 16px 10px;
+            overflow-x: auto;
+        }
+
+        .quick-chips::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chip {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .chip:hover {
+            background: var(--surface-card);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Поле ввода */
+        .input-panel {
+            padding: 0 16px 16px;
+        }
+
+        .input-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 10px 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color 0.15s;
+        }
+
+        .input-bar:focus-within {
+            border-color: var(--primary);
+        }
+
+        #user-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.94rem;
+            line-height: 1.4;
+            resize: none;
+            max-height: 120px;
+            padding: 4px 0;
+        }
+
+        #user-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        #send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background-color 0.15s;
+        }
+
+        #send-btn:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        #send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        #send-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <span class="dot"></span>
+            <span>AI Tutor — ЕГЭ Математика</span>
+        </div>
+        <div class="user-id-wrap" title="ID ученика в памяти">
+            <span>ID:</span>
+            <input type="number" id="user-id-input" value="12345">
+        </div>
+    </header>
+
+    <main>
+        <div id="chat-window">
+            <div class="msg tutor">
+                <div class="bubble">
+                    Привет! Я бот для подготовки к профильному ЕГЭ по математике.<br>
+                    Могу выдать задачу (№4, 6, 15), объяснить теорию или проверить твой ответ.
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-chips" id="quick-chips">
+            <button class="chip" data-text="Дай задачу по номеру 4">Задача №4 (Вероятность)</button>
+            <button class="chip" data-text="Дай задачу по номеру 6">Задача №6 (Геометрия)</button>
+            <button class="chip" data-text="Дай задачу по номеру 15">Задача №15 (Неравенства)</button>
+            <button class="chip" data-text="Объясни теорему синусов">Теорема синусов</button>
+        </div>
+
+        <div class="input-panel">
+            <div class="input-bar">
+                <textarea id="user-input" placeholder="Напишите вопрос или ответ на задачу..." rows="1"></textarea>
+                <button id="send-btn" title="Отправить">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const userIdInput = document.getElementById('user-id-input');
+        const quickChips = document.getElementById('quick-chips');
+
+        let isLoading = false;
+
+        // Автоподгон высоты поля ввода
+        userInput.addEventListener('input', () => {
+            userInput.style.height = 'auto';
+            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px';
+        });
+
+        // Отправка по Enter (Shift+Enter для новой строки)
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+            }
+        });
+
+        sendBtn.addEventListener('click', send);
+
+        // Быстрые кнопки
+        quickChips.addEventListener('click', (e) => {
+            const chip = e.target.closest('.chip');
+            if (!chip) return;
+            userInput.value = chip.dataset.text;
+            send();
+        });
+
+        function renderMath(element) {
+            if (window.renderMathInElement) {
+                renderMathInElement(element, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                        { left: '\\[', right: '\\]', display: true },
+                        { left: '\\(', right: '\\)', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
+        }
+
+        function addMessage(role, text) {
+            const msg = document.createElement('div');
+            msg.className = `msg ${role}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+
+            if (role === 'tutor') {
+                bubble.innerHTML = window.marked ? marked.parse(text) : text;
+                renderMath(bubble);
+            } else {
+                bubble.textContent = text;
+            }
+
+            msg.appendChild(bubble);
+            chatWindow.appendChild(msg);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function showLoading() {
+            const msg = document.createElement('div');
+            msg.className = 'msg tutor';
+            msg.id = 'loading';
+            msg.innerHTML = '<div class="bubble typing"><span></span><span></span><span></span></div>';
+            chatWindow.appendChild(msg);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        function removeLoading() {
+            const el = document.getElementById('loading');
+            if (el) el.remove();
+        }
+
+        async function send() {
+            const text = userInput.value.trim();
+            if (!text || isLoading) return;
+
+            const userId = parseInt(userIdInput.value) || 12345;
+
+            addMessage('user', text);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            isLoading = true;
+            sendBtn.disabled = true;
+            showLoading();
+
+            try {
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, message: text })
+                });
+
+                if (!res.ok) throw new Error('Ошибка сервера');
+
+                const data = await res.json();
+                removeLoading();
+
+                const reply = typeof data === 'string' ? data : JSON.stringify(data);
+                addMessage('tutor', reply);
+            } catch (err) {
+                removeLoading();
+                addMessage('tutor', '⚠️ Не удалось получить ответ. Проверь работу сервера.');
+            } finally {
+                isLoading = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        // Рендерим формулы в приветственном сообщении
+        document.querySelectorAll('.bubble').forEach(renderMath);
+    </script>
+</body>
+</html>

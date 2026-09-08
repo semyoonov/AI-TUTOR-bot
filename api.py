@@ -18,6 +18,7 @@ from memory.user_memory import (
 from langchain_core.prompts import PromptTemplate
 from langchain_mistralai import ChatMistralAI
 from langchain_core.output_parsers import JsonOutputParser
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="AI-tutor API")
 
@@ -100,6 +101,8 @@ async def chat(req : ChatRequest):
     except Exception as e:
         print(f"Ошибка в API: {e}")
         return "Произошла ошибка. Попробуй позже."
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)
