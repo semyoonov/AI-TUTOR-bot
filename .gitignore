@@ -5,3 +5,4 @@ theory/query.py
 chroma_db_folder
 .env
 memory/data/*.md
+hf_cache/
