@@ -182,8 +182,20 @@
         }
 
         .bubble .katex-display {
-            margin: 8px 0;
+            margin: 10px 0;
+            padding: 8px 4px;
             overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+        }
+
+        .bubble .katex-display::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .bubble .katex-display::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
         }
 
         /* Индикатор загрузки */
